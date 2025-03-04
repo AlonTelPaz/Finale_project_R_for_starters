@@ -1,0 +1,41 @@
+#### Load data & packages ----
+df <- read.csv (file = "Modified_Data.csv")
+library (dplyr)
+
+#### Pre-processing data ----
+df <- select (.data = df,
+              c (Participant_number,
+                 Age,
+                 CBTS_score,
+                 EPDS_score,
+                 HADS_score,
+                 IBQ_R_score,
+                 Sleep_night_duration_bb1
+                 )) # Select only the impotent variables
+
+df <- df |>
+  mutate(Sleep_night_duration_bb1 = na_if(Sleep_night_duration_bb1, 99.99)) # There is a missing data
+
+## Build a function that build a new variable with factor of high or low then the median of CBTS score.
+classify_CBTS <- function(df) {
+  median_CBTS <- median(df$CBTS_score, na.rm = TRUE)  # חישוב חציון תוך התעלמות מ-NA
+  
+  df <- df |>
+    mutate(
+      `high/low CBTS` = factor(
+        ifelse(CBTS_score > median_CBTS, 1, 
+               ifelse(CBTS_score < median_CBTS, 0, NA)),  # אם שווה לחציון → NA
+        levels = c(0, 1),
+        labels = c("low", "high")
+      )
+    )
+  
+  return(df)
+}
+
+df <- classify_CBTS(df)
+
+
+
+
+write.csv(df, "./Pre-processing data.csv", row.names = FALSE)
